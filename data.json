@@ -13,7 +13,7 @@
   },
 
   "spreadsheet": {
-    "_comment": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
+    "_comment": "",
     "api_url": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
     "refresh_menit": 5,
     "auto_fetch":    true,
