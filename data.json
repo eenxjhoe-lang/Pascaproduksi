@@ -1,0 +1,50 @@
+{
+  "_comment": "DOPK Dashboard — Konfigurasi. Edit file ini tanpa menyentuh kode JS.",
+
+  "app": {
+    "title":       "PERKEMBANGAN CAPAIAN PNBP PASCAPRODUKSI",
+    "subtitle":    "Monitoring Realisasi PNBP & Produksi Perikanan · Kementerian Kelautan dan Perikanan",
+    "unit":        "PPP TELUK BATANG & PELABUHAN BINAAN",
+    "upt":         "PELABUHAN PERIKANAN PANTAI TELUK BATANG",
+    "tahun":       2026,
+    "versi":       "10.0",
+    "direktorat":  "DIREKTORAT JENDERAL PERIKANAN",
+    "kementerian": "KEMENTERIAN KELAUTAN DAN PERIKANAN"
+  },
+
+  "spreadsheet": {
+    "_comment": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
+    "api_url":       "",
+    "refresh_menit": 5,
+    "auto_fetch":    true,
+    "fallback_csv":  false
+  },
+
+  "pelabuhan": [
+    { "id": 0, "nama": "PP. Sungai Kakap", "kode": "KAKAP",      "warna": "#1a6fd4", "target": 500000000 },
+    { "id": 1, "nama": "PP. Sukabangun",   "kode": "SUKABANGUN", "warna": "#0891b2", "target": 100000000 },
+    { "id": 2, "nama": "PP. Kuala Jelai",  "kode": "JELAI",      "warna": "#4f46e5", "target": 100000000 }
+  ],
+
+  "bulan": [
+    "JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI",
+    "JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"
+  ],
+
+  "kolom_excel": {
+    "no": 0, "bulan": 1, "kapal": 3, "pemilik": 7,
+    "trip": 13, "produksi": 14, "nilai": 17, "ket": 18
+  },
+
+  "threshold": { "kritis": 25, "kurang": 50, "sedang": 75, "baik": 100 },
+
+  "infografis": {
+    "font": "Plus Jakarta Sans",
+    "catatan_default": "Seluruh pelabuhan masih berada pada kategori KRITIS dengan realisasi di bawah 25% dari target tahunan."
+  },
+
+  "assets": {
+    "logo_kkp": "assets/logo-kkp.svg",
+    "logo_sdg": "assets/logo-sdg08.svg"
+  }
+}

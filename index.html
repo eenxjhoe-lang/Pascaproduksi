@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard PNBP Pascaproduksi — Kementerian Kelautan dan Perikanan">
+  <meta name="author"      content="Direktorat Jenderal Perikanan Tangkap, KKP">
+  <title>DOPK v9 — Dashboard PNBP Pascaproduksi</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/logo-kkp.svg">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Third-party libraries (sinkron agar tersedia saat script.js berjalan) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Live Status CSS -->
+  <style>
+    /* Live Status Bar */
+    #live-status-bar{
+      display:none;flex;align-items:center;gap:9px;
+      padding:8px 28px;font-size:11px;font-weight:500;
+      background:#fffbeb;border-bottom:1px solid #fde68a;color:#92400e;
+    }
+    .ls-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .ls-loading{background:#3b82f6;animation:ls-pulse 1s infinite}
+    .ls-error{background:#dc2626}
+    @keyframes ls-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+    /* Live indicator di topbar */
+    #live-indicator{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:16px;font-size:10px;font-weight:700;
+      background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46;
+    }
+    #live-indicator.live{background:#dcfce7}
+    #live-indicator .li-dot{
+      width:7px;height:7px;border-radius:50%;background:#059669;
+      animation:li-blink 2s infinite;
+    }
+    @keyframes li-blink{0%,100%{opacity:1}50%{opacity:.2}}
+    #live-indicator.error{background:#fff5f5;border-color:#fecaca;color:#dc2626}
+    #live-indicator.error .li-dot{background:#dc2626;animation:none}
+    #live-indicator.loading .li-dot{background:#3b82f6}
+
+    /* Last update text */
+    #live-last-update{
+      display:none;font-size:9px;color:var(--muted);
+      margin-top:1px;letter-spacing:.3px;
+    }
+
+    /* Btn refresh */
+    .btn-refresh{
+      background:#fff;border:1px solid var(--border2);color:var(--text2);
+      padding:6px 10px;border-radius:8px;font-family:inherit;font-size:12px;
+      font-weight:600;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;
+    }
+    .btn-refresh:hover{border-color:var(--blue);color:var(--blue);background:var(--blue3)}
+    .btn-refresh.spinning svg{animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* API config badge */
+    #api-config-badge{
+      display:none;align-items:center;gap:6px;
+      background:#fff7ed;border:1px solid #fed7aa;
+      padding:5px 10px;border-radius:7px;font-size:10px;font-weight:600;color:#92400e;cursor:pointer;
+    }
+    #api-config-badge:hover{background:#ffedd5}
+    #api-config-badge.connected{background:#f0fdf4;border-color:#bbf7d0;color:#065f46}
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     SIDEBAR
+     ══════════════════════════════════════════ -->
+<aside class="sidebar">
+
+  <!-- Logo & Nama Aplikasi -->
+  <div class="sb-logo">
+    <!-- Ganti dengan logo resmi KKP: edit assets/logo-kkp.svg atau ubah path di data.json -->
+    <img src="assets/logo-kkp.svg" alt="Logo KKP" class="sb-logo-img" id="sb-logo-img"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="sb-icon" style="display:none">⚓</div>
+    <div class="sb-title">
+      PNBP Pascaproduksi
+      <small>KKP · <span id="sb-year-text">2026</span></small>
+    </div>
+  </div>
+
+  <!-- Navigasi -->
+  <nav class="sb-nav">
+
+    <div class="sb-section">Menu Utama</div>
+    <div class="sb-item active" onclick="showPage('overview')" id="nav-overview">
+      <span style="font-size:14px">🏠</span> Semua Pelabuhan
+    </div>
+
+    <div class="sb-section">Rincian Pelabuhan</div>
+    <div class="sb-item" onclick="showPage('port-0')" id="nav-port-0">
+      <span class="sb-dot" style="background:var(--p0)"></span>PP. Sungai Kakap
+      <span class="sb-badge" id="nb-0">0</span>
+    </div>
+    <div class="sb-item" onclick="showPage('port-1')" id="nav-port-1">
+      <span class="sb-dot" style="background:var(--p1)"></span>PP. Sukabangun
+      <span class="sb-badge" id="nb-1">0</span>
+    </div>
+    <div class="sb-item" onclick="showPage('port-2')" id="nav-port-2">
+      <span class="sb-dot" style="background:var(--p2)"></span>PP. Kuala Jelai
+      <span class="sb-badge" id="nb-2">0</span>
+    </div>
+
+    <div class="sb-section">Monitoring</div>
+    <div class="sb-item" onclick="showPage('warnings')" id="nav-warnings">
+      <span style="font-size:14px">⚠️</span> Peringatan Sistem
+      <span class="sb-badge" id="nb-warn">0</span>
+    </div>
+    <div class="sb-item" onclick="showPage('progress')" id="nav-progress">
+      <span style="font-size:14px">🎯</span> Progres Capaian
+    </div>
+    <div class="sb-item" onclick="showPage('insights')" id="nav-insights">
+      <span style="font-size:14px">💡</span> Insight Otomatis
+    </div>
+
+    <div class="sb-section">Analisis</div>
+    <div class="sb-item" onclick="showPage('compare')" id="nav-compare">
+      <span style="font-size:14px">📊</span> Grafik Perbandingan
+    </div>
+    <div class="sb-item" onclick="showPage('export')" id="nav-export">
+      <span style="font-size:14px">📤</span> Ekspor Data
+    </div>
+
+    <div class="sb-section">Data &amp; Laporan</div>
+    <div class="sb-item" onclick="openImportModal()">
+      <span style="font-size:14px">📥</span> Import Data
+    </div>
+    <div class="sb-item" onclick="exportInfografis()"
+         style="margin-top:4px;background:rgba(26,111,212,.12);border-color:rgba(26,111,212,.3);color:#6aaef5">
+      <span style="font-size:14px">📄</span> Infografis PDF
+    </div>
+
+  </nav>
+
+  <!-- Footer Sidebar -->
+  <div class="sb-footer">
+    <div class="sb-year">TAHUN 2026</div>
+  </div>
+
+</aside>
+
+
+<!-- ══════════════════════════════════════════
+     MAIN CONTENT
+     ══════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">PERKEMBANGAN CAPAIAN PNBP PASCAPRODUKSI</div>
+      <div class="topbar-sub">
+        Monitoring Realisasi PNBP &amp; Produksi Perikanan · Kementerian Kelautan dan Perikanan
+      </div>
+      <div id="live-last-update"></div>
+    </div>
+    <div class="topbar-actions">
+      <!-- Live indicator + refresh -->
+      <div id="api-config-badge" onclick="openApiConfig()" title="Klik untuk konfigurasi URL Spreadsheet">
+        ⚙️ Hubungkan Spreadsheet
+      </div>
+      <div id="live-indicator" class="loading" title="Status koneksi Spreadsheet">
+        <span class="li-dot"></span>
+        <span id="live-label">Menghubungkan…</span>
+      </div>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh data dari Spreadsheet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 2v6h-6M3 22v-6h6M3.5 9A9 9 0 0115 4.5M20.5 15A9 9 0 019 19.5"/>
+        </svg>
+        Refresh
+      </button>
+      <button class="btn btn-primary" onclick="openImportModal()">📥 Import</button>
+      <button class="btn btn-indigo"  onclick="exportInfografis()">📄 Infografis PDF</button>
+      <button class="btn btn-outline" onclick="showPage('export')">📤 Ekspor</button>
+      <button class="btn btn-danger"  onclick="openConfirmClear()">🗑 Hapus Data</button>
+    </div>
+  </div>
+
+
+  <!-- ── Live Status Bar (di bawah topbar) ── -->
+  <div id="live-status-bar"></div>
+
+  <!-- ── HALAMAN UTAMA ── -->
+  <div class="content">
+
+    <!-- ► OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div id="global-warnings"></div>
+      <div id="total-summary"></div>
+      <div id="ov-0"></div>
+      <div id="ov-1"></div>
+      <div id="ov-2"></div>
+    </div>
+
+    <!-- ► RINCIAN PELABUHAN (konten dirender JS) -->
+    <div class="page" id="page-port-0"></div>
+    <div class="page" id="page-port-1"></div>
+    <div class="page" id="page-port-2"></div>
+
+    <!-- ► PERINGATAN SISTEM -->
+    <div class="page" id="page-warnings">
+      <div class="page-header">
+        <div class="page-title">⚠️ Peringatan Sistem — Perlu Perhatian</div>
+        <div class="page-subtitle">Daftar peringatan dan anomali yang terdeteksi dari seluruh pelabuhan</div>
+      </div>
+      <div class="section-card" style="background:#fffbeb;border-color:#fde68a">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:26px">💡</div>
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:6px">Tentang Peringatan Sistem</div>
+            <div style="font-size:11px;color:#78350f;line-height:1.7">
+              Halaman ini menampilkan seluruh peringatan otomatis yang terdeteksi dari data PNBP Pascaproduksi.
+              Peringatan dikelompokkan berdasarkan tingkat keparahan:
+              <strong style="color:#dc2626">🔴 KRITIS</strong> (capaian &lt; 25% atau anomali besar),
+              <strong style="color:#d97706">🟡 PERHATIAN</strong> (capaian 25–50% atau data tidak konsisten),
+              <strong style="color:#059669">🟢 INFORMATIF</strong> (catatan tambahan).
+              Peringatan KRITIS perlu tindak lanjut segera untuk mencapai target tahunan.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="warnings-body"></div>
+    </div>
+
+    <!-- ► PROGRES CAPAIAN -->
+    <div class="page" id="page-progress">
+      <div class="page-header">
+        <div class="page-title">🎯 Progres Capaian PNBP</div>
+        <div class="page-subtitle">Perbandingan progres realisasi terhadap target tahunan per pelabuhan</div>
+      </div>
+      <div class="section-card" style="background:#eff6ff;border-color:#bfdbfe">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:26px">📘</div>
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#1e40af;margin-bottom:6px">Tentang Progres Capaian PNBP</div>
+            <div style="font-size:11px;color:#1e3a8a;line-height:1.7">
+              <strong>Progres Capaian PNBP</strong> adalah indikator utama kinerja pelabuhan dalam mencapai target
+              Penerimaan Negara Bukan Pajak (PNBP) Pascaproduksi tahunan.
+              Dihitung sebagai persentase Realisasi dibagi Target, dengan klasifikasi:
+              <strong style="color:#dc2626">KRITIS &lt; 25%</strong>,
+              <strong style="color:#d97706">KURANG 25–50%</strong>,
+              <strong style="color:#2563eb">SEDANG 50–75%</strong>,
+              <strong style="color:#059669">BAIK ≥ 75%</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="progress-body"></div>
+    </div>
+
+    <!-- ► INSIGHT OTOMATIS -->
+    <div class="page" id="page-insights">
+      <div class="page-header">
+        <div class="page-title">💡 Insight Otomatis</div>
+        <div class="page-subtitle">Analisa otomatis yang dihasilkan dari pola data transaksi PNBP</div>
+      </div>
+      <div class="section-card" style="background:#f0fdf4;border-color:#bbf7d0">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:26px">🧠</div>
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#065f46;margin-bottom:6px">Tentang Insight Otomatis</div>
+            <div style="font-size:11px;color:#064e3b;line-height:1.7">
+              <strong>Insight Otomatis</strong> adalah kesimpulan cerdas yang disusun sistem berdasarkan data produksi,
+              nilai PNBP, dan tren bulanan. Mencakup: Bulan Terbaik, Tren Produksi, Proyeksi Tahunan,
+              Anomali Data, dan Kapal Terproduksi.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="insights-body"></div>
+    </div>
+
+    <!-- ► GRAFIK PERBANDINGAN -->
+    <div class="page" id="page-compare">
+      <div class="page-header">
+        <div class="page-title">📊 Grafik Perbandingan Antar Pelabuhan</div>
+        <div class="page-subtitle">Perbandingan realisasi, produksi, dan capaian target seluruh pelabuhan</div>
+      </div>
+      <div class="compare-grid" id="cmp-cards"></div>
+      <div class="section-card">
+        <div class="section-title"><span>💰</span>Realisasi PNBP vs Target</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="cmp-chart-pnbp"></canvas></div>
+      </div>
+      <div class="charts-grid">
+        <div class="section-card">
+          <div class="section-title"><span>📦</span>Total Produksi per Pelabuhan (kg)</div>
+          <div class="chart-wrap"><canvas id="cmp-chart-prod"></canvas></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title"><span>📋</span>Jumlah LPS per Pelabuhan</div>
+          <div class="chart-wrap"><canvas id="cmp-chart-lps"></canvas></div>
+        </div>
+      </div>
+      <div class="section-card">
+        <div class="section-title"><span>📈</span>Tren Produksi Bulanan per Pelabuhan</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="cmp-chart-trend"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ► EKSPOR DATA -->
+    <div class="page" id="page-export">
+      <div class="page-header">
+        <div class="page-title">📤 Ekspor Data</div>
+        <div class="page-subtitle">Unduh data dalam berbagai format</div>
+      </div>
+      <div class="export-grid">
+        <div class="export-card" onclick="exportCSV(0)">
+          <div class="export-icon">📊</div>
+          <div class="export-title">CSV — PP. Sungai Kakap</div>
+          <div class="export-desc">Export data transaksi ke format CSV</div>
+        </div>
+        <div class="export-card" onclick="exportCSV(1)">
+          <div class="export-icon">📊</div>
+          <div class="export-title">CSV — PP. Sukabangun</div>
+          <div class="export-desc">Export data transaksi ke format CSV</div>
+        </div>
+        <div class="export-card" onclick="exportCSV(2)">
+          <div class="export-icon">📊</div>
+          <div class="export-title">CSV — PP. Kuala Jelai</div>
+          <div class="export-desc">Export data transaksi ke format CSV</div>
+        </div>
+        <div class="export-card" onclick="exportCSVAll()">
+          <div class="export-icon">🗂️</div>
+          <div class="export-title">CSV — Semua Pelabuhan</div>
+          <div class="export-desc">Export seluruh data dalam satu file CSV</div>
+        </div>
+        <div class="export-card" onclick="exportJSON()">
+          <div class="export-icon">🔧</div>
+          <div class="export-title">JSON — Semua Data</div>
+          <div class="export-desc">Format JSON untuk integrasi sistem</div>
+        </div>
+        <div class="export-card" onclick="window.print()">
+          <div class="export-icon">🖨️</div>
+          <div class="export-title">Cetak Laporan</div>
+          <div class="export-desc">Buka dialog cetak browser</div>
+        </div>
+        <div class="export-card" onclick="exportInfografis()"
+             style="border-top:3px solid #4f46e5;grid-column:span 3">
+          <div class="export-icon">📄</div>
+          <div class="export-title" style="color:#4f46e5">Export Infografis PDF — Template DOPK KKP 2026</div>
+          <div class="export-desc">
+            Generate infografis resmi sesuai template · Data otomatis diisi · Tanggal update sesuai tanggal export
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card" style="margin-top:20px">
+        <div class="section-title">📋 Preview Data — Semua Pelabuhan</div>
+        <table>
+          <thead>
+            <tr><th>No</th><th>Pelabuhan</th><th>Bulan</th><th>Nama Kapal</th>
+                <th>Pemilik</th><th>Trip</th><th>Produksi (kg)</th><th>Nilai PNBP (Rp)</th><th>Ket</th></tr>
+          </thead>
+          <tbody id="export-preview"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+
+<!-- ══════════════════════════════════════════
+     MODAL — IMPORT DATA
+     ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📥 Import Data Excel</h3>
+      <button class="modal-close" onclick="closeModal('modal-import')">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Mode Import -->
+      <div style="margin-bottom:14px">
+        <div class="fl-label" style="margin-bottom:8px">Mode Import</div>
+        <div class="import-mode">
+          <button class="im-btn selected" id="im-btn-append" onclick="setImportMode('append')">
+            <div class="im-btn-title">➕ Tambahkan</div>
+            <div class="im-btn-sub">Menambah ke data yang sudah ada</div>
+          </button>
+          <button class="im-btn" id="im-btn-replace" onclick="setImportMode('replace')">
+            <div class="im-btn-title">🔄 Ganti Semua</div>
+            <div class="im-btn-sub">Mengganti seluruh data yang ada</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-btn-excel"   onclick="switchTab('excel')">📊 Upload Excel (.xlsx)</button>
+        <button class="tab-btn"        id="tab-btn-gsheets" onclick="switchTab('gsheets')">📋 Google Sheets</button>
+      </div>
+
+      <!-- Tab: Excel -->
+      <div class="tab-pane active" id="tab-excel">
+        <div class="drop-zone" id="drop-zone"
+             onclick="document.getElementById('file-input').click()">
+          <div class="drop-zone-icon">📂</div>
+          <div class="drop-zone-title">Klik atau seret file Excel ke sini</div>
+          <div class="drop-zone-sub">Format: .xlsx · Multi-sheet otomatis terdeteksi</div>
+        </div>
+        <input type="file" id="file-input" class="hidden-input"
+               accept=".xlsx,.xls,.csv" onchange="handleFileInput(event)">
+
+        <div id="import-preview-wrap" style="display:none">
+          <div class="ip-wrap">
+            <div class="ip-head">
+              <span class="ip-head-title">Preview Data Terdeteksi</span>
+              <span class="ip-head-count" id="import-count-text"></span>
+            </div>
+            <div class="ip-table-wrap">
+              <table id="import-preview-table"></table>
+            </div>
+          </div>
+          <div id="import-sheet-summary"
+               style="margin-top:10px;font-size:11px;color:var(--text2);line-height:1.7"></div>
+        </div>
+      </div>
+
+      <!-- Tab: Google Sheets -->
+      <div class="tab-pane" id="tab-gsheets">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.7">
+          Masukkan URL Google Sheets yang telah dipublikasikan sebagai CSV.
+          Pilih pelabuhan yang sesuai dengan sheet tersebut.
+        </p>
+        <div style="margin-bottom:10px">
+          <div class="fl-label" style="margin-bottom:6px">Pelabuhan Tujuan Data</div>
+          <select class="fl-select" id="gs-port-select" style="width:100%">
+            <option value="0">PP. Sungai Kakap</option>
+            <option value="1">PP. Sukabangun</option>
+            <option value="2">PP. Kuala Jelai</option>
+          </select>
+        </div>
+        <div class="gs-row">
+          <input class="gs-input" type="url" id="gs-url"
+                 placeholder="https://docs.google.com/spreadsheets/d/...">
+          <button class="btn btn-primary" onclick="fetchGoogleSheet()">🔍 Muat</button>
+        </div>
+        <div class="gs-help">
+          💡 Cara publish: <strong>File → Bagikan → Publikasikan ke Web → Format CSV → Publikasikan</strong>
+        </div>
+        <div class="gs-status" id="gs-status"></div>
+        <div id="gs-preview-wrap" style="display:none">
+          <div class="ip-wrap" style="margin-top:12px">
+            <div class="ip-head">
+              <span class="ip-head-title">Preview Data dari Sheets</span>
+              <span class="ip-head-count" id="gs-count-text"></span>
+            </div>
+            <div class="ip-table-wrap"><table id="gs-preview-table"></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info format -->
+      <div style="margin-top:14px;background:var(--blue3);border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:10px;color:var(--blue2);line-height:1.7">
+        <strong>📌 Format kolom Excel yang didukung (sesuai format DOPK):</strong><br>
+        Kolom B=Bulan · D=Nama Kapal · H=Pemilik · N=Trip · O=Produksi (kg) · R=Nominal PNBP · S=Keterangan<br>
+        Sheet name harus mengandung: <em>KAKAP / SUKABANGUN / JELAI</em>
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <span id="import-footer-info" style="font-size:11px;color:var(--muted);flex:1"></span>
+      <button class="btn-cancel" onclick="closeModal('modal-import')">Batal</button>
+      <button class="btn-save" id="btn-execute-import" onclick="executeImport()" style="display:none">
+        📥 Import <span id="import-btn-count"></span> Baris
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL — KONFIRMASI HAPUS
+     ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="confirm-box">
+    <h3>🗑 Hapus Semua Data?</h3>
+    <p>
+      Semua data dari ketiga pelabuhan akan dihapus dan dashboard akan dikosongkan.
+      Tindakan ini tidak dapat dibatalkan.
+    </p>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="closeModal('modal-confirm')">Batal</button>
+      <button class="btn-confirm-del" onclick="clearAllData()">Ya, Hapus Semua</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TOAST NOTIFICATION
+     ══════════════════════════════════════════ -->
+<div class="toast" id="toast">
+  <div class="toast-bar" id="toast-bar"></div>
+  <span id="toast-msg"></span>
+</div>
+
+
+
+<!-- ══ MODAL: API CONFIG ══ -->
+<div class="modal-overlay" id="modal-api-config">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head">
+      <h3>⚙️ Hubungkan Google Sheets</h3>
+      <button class="modal-close" onclick="closeModal('modal-api-config')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:11px;color:#1e40af;line-height:1.7">
+        <strong>📌 Cara menghubungkan:</strong><br>
+        1. Buka Google Sheets Anda → <strong>Extensions → Apps Script</strong><br>
+        2. Paste kode dari file <code>apps-script.gs</code> yang tersedia di paket ini<br>
+        3. Klik <strong>Deploy → New deployment → Web app</strong><br>
+        4. Set "Who has access" = <strong>Anyone</strong><br>
+        5. Salin URL yang muncul, paste di bawah ini
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:5px">URL Google Apps Script Web App</label>
+        <div style="display:flex;gap:8px">
+          <input type="url" id="api-url-input"
+            placeholder="https://script.google.com/macros/s/AKfyc.../exec"
+            style="flex:1;background:#fff;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:12px;outline:none"
+            onkeydown="if(event.key==='Enter') saveApiUrl()">
+          <button onclick="testApiConnection()" style="background:var(--blue3);border:1px solid var(--blue);color:var(--blue);padding:9px 14px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+            🔍 Test
+          </button>
+        </div>
+        <div id="api-test-result" style="margin-top:8px;font-size:11px;display:none;padding:8px 12px;border-radius:7px"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;color:var(--text2)">
+          <input type="checkbox" id="cfg-auto-refresh" checked style="width:14px;height:14px;cursor:pointer">
+          Auto-refresh otomatis setiap
+        </label>
+        <input type="number" id="cfg-interval" min="1" max="60" value="5"
+          style="width:55px;background:#fff;border:1.5px solid var(--border2);border-radius:6px;padding:4px 8px;font-family:inherit;font-size:12px;text-align:center">
+        <span style="font-size:12px;color:var(--text2)">menit</span>
+      </div>
+
+      <div style="margin-top:12px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:10px;color:var(--muted);line-height:1.7">
+        💡 Pengaturan ini disimpan di browser lokal. Setiap orang yang mengakses web ini
+        perlu mengatur URL API sekali di perangkat mereka, atau Anda bisa mengisi
+        <code>spreadsheet.api_url</code> di <code>data.json</code> agar URL sudah terpasang bawaan.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span style="font-size:11px;color:var(--muted);flex:1" id="api-modal-info"></span>
+      <button class="btn-cancel" onclick="closeModal('modal-api-config')">Batal</button>
+      <button class="btn-save" onclick="saveApiUrl()">💾 Simpan & Hubungkan</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- App Script -->
+<script src="script.js"></script>
+
+</body>
+</html>

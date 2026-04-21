@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panduan Setup — DOPK Dashboard Live</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f0f4f8;color:#0f1f35;font-size:14px;line-height:1.6}
+.page{max-width:820px;margin:0 auto;padding:40px 24px}
+h1{font-size:28px;font-weight:900;color:#0d1b2e;margin-bottom:6px}
+.subtitle{color:#7a95b0;font-size:13px;margin-bottom:32px}
+h2{font-size:16px;font-weight:800;color:#0d1b2e;margin:32px 0 12px;display:flex;align-items:center;gap:8px}
+h3{font-size:13px;font-weight:700;color:#3a5070;margin:18px 0 8px;text-transform:uppercase;letter-spacing:1px}
+p{margin-bottom:10px;color:#3a5070}
+.card{background:#fff;border:1px solid #e2eaf3;border-radius:12px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(15,31,53,.05)}
+.step-num{width:32px;height:32px;background:#1a6fd4;color:#fff;border-radius:8px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+.step-body{flex:1}
+.step-title{font-size:13px;font-weight:700;color:#0f1f35;margin-bottom:4px}
+.step-sub{font-size:12px;color:#7a95b0;line-height:1.6}
+code{background:#f1f5f9;border:1px solid #e2eaf3;border-radius:4px;padding:1px 6px;font-family:'Courier New',monospace;font-size:12px;color:#1558b0}
+pre{background:#0d1b2e;color:#e2eaf3;border-radius:8px;padding:14px 16px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;margin:10px 0;line-height:1.6}
+pre .c{color:#7a95b0}
+pre .s{color:#4ade80}
+pre .k{color:#60a5fa}
+pre .n{color:#fbbf24}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-blue{background:#e8f0fb;color:#1558b0}
+.badge-green{background:#dcfce7;color:#065f46}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-red{background:#fff5f5;color:#dc2626}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px 16px;margin:12px 0;font-size:12px;color:#1e40af;line-height:1.7}
+.warn-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:12px 0;font-size:12px;color:#92400e;line-height:1.7}
+.success-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 16px;margin:12px 0;font-size:12px;color:#065f46;line-height:1.7}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+th{background:#f8fafc;padding:8px 12px;text-align:left;font-weight:700;color:#7a95b0;border-bottom:2px solid #e2eaf3;font-size:10px;text-transform:uppercase;letter-spacing:1px}
+td{padding:8px 12px;border-bottom:1px solid #e2eaf3;color:#3a5070}
+tr:last-child td{border-bottom:none}
+.arch{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;margin:20px 0;align-items:center}
+.arch-box{background:#fff;border:2px solid;border-radius:10px;padding:14px;text-align:center}
+.arch-box.green{border-color:#059669;background:#f0fdf4}
+.arch-box.amber{border-color:#d97706;background:#fffbeb}
+.arch-box.blue{border-color:#1a6fd4;background:#eff6ff}
+.arch-icon{font-size:24px;margin-bottom:5px}
+.arch-title{font-size:11px;font-weight:800;color:#0f1f35;margin-bottom:2px}
+.arch-sub{font-size:9px;color:#7a95b0}
+.arch-arrow{text-align:center;font-size:20px;color:#7a95b0;padding:0 8px}
+@media print{body{background:#fff}.page{padding:20px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e2eaf3">
+    <div style="width:48px;height:48px;background:#1a6fd4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px">⚓</div>
+    <div>
+      <h1>Panduan Setup Dashboard Live</h1>
+      <p class="subtitle" style="margin:0">DOPK Dashboard v10 — Data Otomatis dari Google Sheets</p>
+    </div>
+  </div>
+
+  <!-- ARSITEKTUR -->
+  <div class="card">
+    <h2><span>🗺️</span> Bagaimana Cara Kerjanya</h2>
+    <div class="arch">
+      <div class="arch-box green">
+        <div class="arch-icon">📊</div>
+        <div class="arch-title">Google Sheets</div>
+        <div class="arch-sub">Input data harian<br>3 sheet pelabuhan</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box amber">
+        <div class="arch-icon">⚡</div>
+        <div class="arch-title">Apps Script</div>
+        <div class="arch-sub">API otomatis<br>deploy 1x</div>
+      </div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box blue">
+        <div class="arch-icon">🖥️</div>
+        <div class="arch-title">Dashboard</div>
+        <div class="arch-sub">Auto-refresh<br>siapa saja bisa akses</div>
+      </div>
+    </div>
+    <p style="margin-top:8px;font-size:12px;color:#7a95b0">
+      Petugas cukup menginput data di Google Sheets seperti biasa. Dashboard otomatis memperbarui tampilan setiap beberapa menit tanpa perlu upload file Excel lagi.
+    </p>
+  </div>
+
+  <!-- DAFTAR FILE -->
+  <div class="card">
+    <h2><span>📁</span> File yang Disertakan</h2>
+    <table>
+      <thead><tr><th>File</th><th>Fungsi</th></tr></thead>
+      <tbody>
+        <tr><td><code>index.html</code></td><td>Halaman utama dashboard</td></tr>
+        <tr><td><code>style.css</code></td><td>Tampilan &amp; desain</td></tr>
+        <tr><td><code>script.js</code></td><td>Logika aplikasi + live fetch</td></tr>
+        <tr><td><code>data.json</code></td><td>Konfigurasi (target, warna, URL API)</td></tr>
+        <tr><td><code>apps-script.gs</code> ⭐</td><td>Kode Google Apps Script — paste ke Sheets</td></tr>
+        <tr><td><code>assets/logo-kkp.svg</code></td><td>Placeholder logo KKP</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- LANGKAH 1: GOOGLE SHEETS -->
+  <h2><span>📋</span> Langkah 1 — Siapkan Google Sheets</h2>
+  <div class="card">
+    <div class="step"><div class="step-num">1</div><div class="step-body">
+      <div class="step-title">Buat atau gunakan Google Sheets yang sudah ada</div>
+      <div class="step-sub">Pastikan Sheets memiliki 3 sheet dengan nama mengandung kata kunci:<br>
+        <code>KAKAP</code> atau <code>SUNGAI KAKAP</code> → PP. Sungai Kakap<br>
+        <code>SUKABANGUN</code> → PP. Sukabangun<br>
+        <code>JELAI</code> atau <code>KUALA JELAI</code> → PP. Kuala Jelai
+      </div>
+    </div></div>
+
+    <div class="step"><div class="step-num">2</div><div class="step-body">
+      <div class="step-title">Pastikan format kolom sesuai DOPK</div>
+      <div class="step-sub">Baris 1 = header, data mulai baris 2</div>
+    </div></div>
+
+    <table>
+      <thead><tr><th>Kolom Excel</th><th>Indeks</th><th>Isi</th><th>Contoh</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>0</td><td>NO (angka urut — wajib)</td><td>1, 2, 3, ...</td></tr>
+        <tr><td>B</td><td>1</td><td>BULAN</td><td>JANUARI, FEBRUARI, ...</td></tr>
+        <tr><td>D</td><td>3</td><td>NAMA KAPAL</td><td>Keprindo 8</td></tr>
+        <tr><td>H</td><td>7</td><td>PEMILIK</td><td>Alimin</td></tr>
+        <tr><td>N</td><td>13</td><td>TRIP PENANGKAPAN (HARI)</td><td>11</td></tr>
+        <tr><td>O</td><td>14</td><td>JUMLAH PRODUKSI (KG)</td><td>2055</td></tr>
+        <tr><td>R</td><td>17</td><td>NOMINAL BAYAR PNBP (RP)</td><td>847450</td></tr>
+        <tr><td>S</td><td>18</td><td>KETERANGAN</td><td>LUNAS</td></tr>
+      </tbody>
+    </table>
+    <div class="info-box">💡 Kolom C, E, F, G, I, J, K, L, M, P, Q bisa berisi apa saja (data kapal, tanggal, kode biling, dll). Dashboard hanya membaca kolom yang tertera di atas.</div>
+  </div>
+
+  <!-- LANGKAH 2: APPS SCRIPT -->
+  <h2><span>⚡</span> Langkah 2 — Deploy Google Apps Script</h2>
+  <div class="card">
+    <div class="step"><div class="step-num">1</div><div class="step-body">
+      <div class="step-title">Buka Google Apps Script dari Sheets Anda</div>
+      <div class="step-sub">Di Google Sheets: klik menu <strong>Extensions → Apps Script</strong></div>
+    </div></div>
+
+    <div class="step"><div class="step-num">2</div><div class="step-body">
+      <div class="step-title">Tempel kode dari <code>apps-script.gs</code></div>
+      <div class="step-sub">Hapus semua kode default di editor, lalu paste isi file <code>apps-script.gs</code></div>
+    </div></div>
+
+    <div class="step"><div class="step-num">3</div><div class="step-body">
+      <div class="step-title">Klik <strong>Save</strong> (ikon disket atau Ctrl+S)</div>
+      <div class="step-sub">Beri nama project, misalnya: <code>DOPK-Dashboard-API</code></div>
+    </div></div>
+
+    <div class="step"><div class="step-num">4</div><div class="step-body">
+      <div class="step-title">Deploy sebagai Web App</div>
+      <div class="step-sub">
+        Klik <strong>Deploy → New deployment</strong><br>
+        ▸ Type: <strong>Web app</strong><br>
+        ▸ Execute as: <strong>Me</strong><br>
+        ▸ Who has access: <strong>Anyone</strong> ← PENTING<br>
+        Klik <strong>Deploy</strong>
+      </div>
+    </div></div>
+
+    <div class="step"><div class="step-num">5</div><div class="step-body">
+      <div class="step-title">Salin URL Web App yang muncul</div>
+      <div class="step-sub">Formatnya seperti ini:
+        <code>https://script.google.com/macros/s/AKfycb.../exec</code><br>
+        URL ini adalah "alamat API" yang akan dipakai oleh dashboard.
+      </div>
+    </div></div>
+
+    <div class="warn-box">⚠️ Setiap kali Anda mengubah kode <code>apps-script.gs</code>, Anda harus membuat <strong>New deployment</strong> baru dan mendapatkan URL baru.</div>
+  </div>
+
+  <!-- LANGKAH 3: KONFIGURASI DASHBOARD -->
+  <h2><span>⚙️</span> Langkah 3 — Konfigurasi Dashboard</h2>
+  <div class="card">
+    <h3>Opsi A — Cara Cepat (via browser)</h3>
+    <div class="step"><div class="step-num">1</div><div class="step-body">
+      <div class="step-title">Buka dashboard di browser</div>
+      <div class="step-sub">Jalankan via server lokal atau hosting</div>
+    </div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">
+      <div class="step-title">Klik tombol "⚙️ Hubungkan Spreadsheet" di topbar</div>
+      <div class="step-sub">Modal konfigurasi akan terbuka</div>
+    </div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">
+      <div class="step-title">Paste URL Apps Script, klik Test, lalu Simpan</div>
+      <div class="step-sub">Dashboard langsung memuat data. URL disimpan di browser.</div>
+    </div></div>
+
+    <h3 style="margin-top:20px">Opsi B — Cara Permanen (via data.json)</h3>
+    <p style="font-size:12px;color:#3a5070;margin-bottom:8px">Edit file <code>data.json</code> agar URL tersedia bawaan untuk semua pengunjung:</p>
+    <pre><span class="c">// data.json</span>
+<span class="n">"spreadsheet"</span>: {
+  <span class="n">"api_url"</span>:       <span class="s">"https://script.google.com/macros/s/AKfycb.../exec"</span>,
+  <span class="n">"refresh_menit"</span>: <span class="k">5</span>,
+  <span class="n">"auto_fetch"</span>:    <span class="k">true</span>
+}</pre>
+    <div class="success-box">✅ Dengan Opsi B, siapa saja yang mengakses URL dashboard Anda akan langsung melihat data terbaru tanpa perlu konfigurasi apapun.</div>
+  </div>
+
+  <!-- LANGKAH 4: HOSTING -->
+  <h2><span>🌐</span> Langkah 4 — Hosting (Agar Bisa Diakses Semua Orang)</h2>
+  <div class="card">
+    <p style="margin-bottom:14px;font-size:12px;color:#7a95b0">Pilih salah satu metode hosting sesuai kebutuhan:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="border:1px solid #e2eaf3;border-radius:8px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#0f1f35;margin-bottom:6px">🆓 GitHub Pages (Gratis)</div>
+        <div style="font-size:11px;color:#7a95b0;line-height:1.6">
+          1. Upload semua file ke repository GitHub<br>
+          2. Settings → Pages → Branch: main<br>
+          3. Dashboard tersedia di: <code>username.github.io/repo</code><br>
+          <span style="color:#059669;font-weight:600">✓ Gratis, mudah, HTTPS otomatis</span>
+        </div>
+      </div>
+      <div style="border:1px solid #e2eaf3;border-radius:8px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#0f1f35;margin-bottom:6px">⚡ Netlify / Vercel (Gratis)</div>
+        <div style="font-size:11px;color:#7a95b0;line-height:1.6">
+          1. Drag &amp; drop folder ke netlify.com atau vercel.com<br>
+          2. Dapatkan URL langsung<br>
+          3. Auto-deploy jika folder diupdate<br>
+          <span style="color:#059669;font-weight:600">✓ Paling cepat, custom domain</span>
+        </div>
+      </div>
+      <div style="border:1px solid #e2eaf3;border-radius:8px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#0f1f35;margin-bottom:6px">🖥️ Server Internal KKP</div>
+        <div style="font-size:11px;color:#7a95b0;line-height:1.6">
+          1. Copy semua file ke folder webserver<br>
+          2. Akses via IP/domain intranet<br>
+          3. Tidak perlu koneksi internet untuk dashboard<br>
+          <span style="color:#1a6fd4;font-weight:600">✓ Privat, kontrol penuh</span>
+        </div>
+      </div>
+      <div style="border:1px solid #e2eaf3;border-radius:8px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#0f1f35;margin-bottom:6px">💻 Lokal (Satu Komputer)</div>
+        <div style="font-size:11px;color:#7a95b0;line-height:1.6">
+          Jalankan di terminal:<br>
+          <code>python -m http.server 8080</code><br>
+          Buka: <code>http://localhost:8080</code><br>
+          <span style="color:#d97706;font-weight:600">⚠ Hanya bisa diakses dari komputer yang sama</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <h2><span>❓</span> Pertanyaan Umum</h2>
+  <div class="card">
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#0f1f35;margin-bottom:3px">Dashboard tidak memuat data, padahal URL sudah benar</div>
+      <div style="font-size:11px;color:#7a95b0">Pastikan saat deploy Apps Script, "Who has access" = <strong>Anyone</strong>. Jika diset ke "Anyone with Google Account", perlu login. Coba juga buka URL Apps Script langsung di browser — harus menampilkan JSON.</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#0f1f35;margin-bottom:3px">Data tidak update meski sudah diisi di Sheets</div>
+      <div style="font-size:11px;color:#7a95b0">Dashboard refresh otomatis setiap 5 menit. Klik tombol <strong>Refresh</strong> di topbar untuk memperbarui seketika. Pastikan baris baru di Sheets memiliki angka di kolom A (NO).</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#0f1f35;margin-bottom:3px">Sheet tidak terdeteksi oleh Apps Script</div>
+      <div style="font-size:11px;color:#7a95b0">Nama sheet harus mengandung salah satu dari: KAKAP, SUNGAI KAKAP, SUKABANGUN, JELAI, KUALA JELAI. Nama tidak peka huruf besar/kecil.</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:#0f1f35;margin-bottom:3px">URL Apps Script berubah setelah update kode</div>
+      <div style="font-size:11px;color:#7a95b0">Setiap "New deployment" menghasilkan URL baru. Update <code>data.json → spreadsheet.api_url</code> dengan URL baru tersebut. Alternatif: gunakan "Manage deployments" untuk update deployment yang ada tanpa mengubah URL.</div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#0f1f35;margin-bottom:3px">Apakah data aman?</div>
+      <div style="font-size:11px;color:#7a95b0">Apps Script membaca Sheets dengan hak akses akun Google Anda. Data diekspos hanya melalui URL API yang Anda buat. Jika Sheets bersifat privat, hanya API-nya yang publik — isi Sheets tidak bisa diakses langsung. Untuk keamanan lebih tinggi, gunakan "Anyone with Google Account" dan tambahkan autentikasi token di Apps Script.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:32px;padding-top:20px;border-top:1px solid #e2eaf3;text-align:center;font-size:11px;color:#7a95b0">
+    DOPK Dashboard v10 · Kementerian Kelautan dan Perikanan · 2026
+  </div>
+
+</div>
+</body>
+</html>
