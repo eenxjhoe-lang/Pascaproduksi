@@ -12,7 +12,7 @@
     "kementerian": "KEMENTERIAN KELAUTAN DAN PERIKANAN"
   },
 
-  "spreadsheet": {
+  "spreadsheet": "https://docs.google.com/spreadsheets/d/1kglKewHLFpWqWh9pnnvPiFeWeKB5zS854P3V4YbKyrw/edit?usp=sharing"
     "_comment": "",
     "api_url": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
     "refresh_menit": 5,
