@@ -12,12 +12,12 @@
     "kementerian": "KEMENTERIAN KELAUTAN DAN PERIKANAN"
   },
 
-  "spreadsheet": "https://docs.google.com/spreadsheets/d/1kglKewHLFpWqWh9pnnvPiFeWeKB5zS854P3V4YbKyrw/edit?usp=sharing"
-    "_comment": "",
+ "spreadsheet": {
+    "_comment": "URL Deployment dari Google Apps Script",
     "api_url": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
     "refresh_menit": 5,
-    "auto_fetch":    true,
-    "fallback_csv":  false
+    "auto_fetch": true,
+    "fallback_csv": false
   },
 
   "pelabuhan": [
