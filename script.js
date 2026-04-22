@@ -17,6 +17,13 @@ let PORT_COLORS = [];
 let BULAN_ORDER = [];
 let KOLOM       = {};
 
+// ════════════════════════════════════════
+// STORAGE KEYS — definisikan di atas agar tidak ReferenceError
+// ════════════════════════════════════════
+const LS_KEY      = 'dopk_v9_data';
+const LS_API_KEY  = 'dopk_api_url';
+const LS_INT_KEY  = 'dopk_refresh_min';
+
 async function loadConfig() {
   try {
     const resp = await fetch('data.json');
@@ -56,11 +63,7 @@ let _refreshTimer   = null;
 let _lastFetchTime  = null;
 let _fetchStatus    = 'idle'; // idle | loading | ok | error
 
-function getApiUrl() {
-  return CONFIG && CONFIG.spreadsheet && CONFIG.spreadsheet.api_url
-    ? CONFIG.spreadsheet.api_url.trim()
-    : '';
-}
+// getApiUrl → lihat definisi lengkap di bagian API Config
 
 function getRefreshInterval() {
   const menit = CONFIG && CONFIG.spreadsheet && CONFIG.spreadsheet.refresh_menit;
@@ -100,6 +103,7 @@ async function fetchFromSpreadsheet(showToastOnOk = true) {
     _lastFetchTime = new Date();
 
     saveData(); // cache ke localStorage
+    hideOnboarding();
     refreshAll();
     if (currentPage.startsWith('port-')) buildDetail(parseInt(currentPage.replace('port-','')));
     if (currentPage === 'compare')  buildComparison();
@@ -138,21 +142,20 @@ function scheduleRefresh() {
 function setFetchStatus(status, errMsg) {
   _fetchStatus = status;
   const bar    = document.getElementById('live-status-bar');
-  if (!bar) return;
-
-  if (status === 'loading') {
-    bar.innerHTML = `<span class="ls-dot ls-loading"></span><span>Memuat data terbaru dari Google Sheets…</span>`;
-    bar.style.display = 'flex';
-  } else if (status === 'ok') {
-    bar.style.display = 'none';
-  } else if (status === 'error') {
-    bar.innerHTML = `<span class="ls-dot ls-error"></span>
-      <span>Gagal terhubung ke Sheets: ${errMsg||''}</span>
-      <button onclick="fetchFromSpreadsheet(true)" style="margin-left:auto;background:var(--red);color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer">Coba Lagi</button>`;
-    bar.style.display = 'flex';
-  } else {
-    bar.style.display = 'none';
+  if (bar) {
+    if (status === 'loading') {
+      bar.innerHTML = '<span class="ls-dot ls-loading"></span><span>Memuat data terbaru dari Google Sheets…</span>';
+      bar.style.display = 'flex';
+    } else if (status === 'error') {
+      bar.innerHTML = '<span class="ls-dot ls-error"></span><span>Gagal terhubung ke Sheets: ' + (errMsg||'') + '</span>'
+        + '<button onclick="fetchFromSpreadsheet(true)" style="margin-left:auto;background:var(--red);color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer">Coba Lagi</button>';
+      bar.style.display = 'flex';
+    } else {
+      bar.style.display = 'none';
+    }
   }
+  // Langsung update live indicator — tidak ada override terpisah
+  updateLiveIndicator();
 }
 
 function updateStatusBar() {
@@ -167,16 +170,21 @@ function updateStatusBar() {
 /** Dipanggil dari tombol refresh manual di topbar */
 function manualRefresh() {
   if (!getApiUrl()) {
-    showToast('#d97706', '⚙️ API URL belum dikonfigurasi. Isi spreadsheet.api_url di data.json');
+    // Belum dikonfigurasi → buka modal setup, bukan tampilkan error
+    openApiConfig();
     return;
   }
-  fetchFromSpreadsheet(true);
+  // Animasi spinning pada tombol
+  const btn = document.getElementById('btn-refresh');
+  if (btn) btn.classList.add('spinning');
+  fetchFromSpreadsheet(true).finally(() => {
+    if (btn) btn.classList.remove('spinning');
+  });
 }
 
 // ════════════════════════════════════════
 // PERSISTENCE — localStorage
 // ════════════════════════════════════════
-const LS_KEY = 'dopk_v9_data';
 
 function saveData() {
   try { localStorage.setItem(LS_KEY, JSON.stringify(appData)); } catch(e) {}
@@ -464,8 +472,8 @@ function renderOvBlock(pi) {
   const kpis = [
     { l:'Total Realisasi PNBP',   v:fmtRp(s.totalNilai),               sub:`dari target ${fmtRp(TARGETS[pi])}`, ico:'💰', c:'kc0', extra:'' },
     { l:'Jumlah Produksi',         v:s.totalProd.toLocaleString('id-ID'), sub:'Kilogram (kg)',                     ico:'🐟', c:'kc1', extra:'' },
-    { l:'Jumlah LPS Terbit',       v:s.lps,                              sub:'Lembar Perhitungan Sendiri',             ico:'📋', c:'kc2', extra:'' },
-    { l:'Jumlah Kapal Aktif',       v:s.ships.length,                     sub:'Unit Kapal Aktif',                  ico:'🚢', c:'kc3', extra:'' },
+    { l:'Jumlah LPS Terbit',       v:s.lps,                              sub:'Lembar Pengantar Surat',             ico:'📋', c:'kc2', extra:'' },
+    { l:'Jumlah Kapal Unik',       v:s.ships.length,                     sub:'Unit Kapal Aktif',                  ico:'🚢', c:'kc3', extra:'' },
     { l:'Prod. Rata-rata/Kapal',   v:s.avg.toLocaleString('id-ID'),      sub:`kg per kapal masuk (${s.lps} LPS)`, ico:'📊', c:'kc4', extra:'' },
     { l:'Persentase Realisasi',    v:fmtPct(s.pct),                      sub:'vs target tahunan',                 ico:'🎯', c:`kc5 ${wCls}`, extra:wBadge },
   ].map(k => `<div class="kpi-card ${k.c}">
@@ -546,7 +554,7 @@ function buildDetail(pi) {
     <div class="kpi-grid">
       <div class="kpi-card kc0"><div class="kpi-lbl">Total Realisasi PNBP</div><div class="kpi-val sm">${fmtRp(s.totalNilai)}</div><div class="kpi-sub">dari target ${fmtRp(TARGETS[pi])}</div><div class="kpi-ico">💰</div></div>
       <div class="kpi-card kc1"><div class="kpi-lbl">Jumlah Produksi</div><div class="kpi-val">${s.totalProd.toLocaleString('id-ID')}</div><div class="kpi-sub">Kilogram (kg)</div><div class="kpi-ico">🐟</div></div>
-      <div class="kpi-card kc2"><div class="kpi-lbl">Jumlah LPS Terbit</div><div class="kpi-val">${s.lps}</div><div class="kpi-sub">Lembar Perhitungan Sendiri</div><div class="kpi-ico">📋</div></div>
+      <div class="kpi-card kc2"><div class="kpi-lbl">Jumlah LPS Terbit</div><div class="kpi-val">${s.lps}</div><div class="kpi-sub">Lembar Pengantar Surat</div><div class="kpi-ico">📋</div></div>
       <div class="kpi-card kc3"><div class="kpi-lbl">Jumlah Kapal Unik</div><div class="kpi-val">${s.ships.length}</div><div class="kpi-sub">Unit Kapal Aktif</div><div class="kpi-ico">🚢</div></div>
       <div class="kpi-card kc4"><div class="kpi-lbl">Prod. Rata-rata/Kapal</div><div class="kpi-val">${s.avg.toLocaleString('id-ID')}</div><div class="kpi-sub">kg per kapal masuk</div><div class="kpi-ico">📊</div></div>
       <div class="kpi-card kc5 ${wCls}"><div class="kpi-lbl">Persentase Realisasi</div><div class="kpi-val">${fmtPct(s.pct)}</div><div class="kpi-sub">vs target tahunan</div><div class="kpi-ico">🎯</div></div>
@@ -1817,8 +1825,6 @@ function showToast(color, msg) {
 // ════════════════════════════════════════
 // API CONFIG MODAL
 // ════════════════════════════════════════
-const LS_API_KEY  = 'dopk_api_url';
-const LS_INT_KEY  = 'dopk_refresh_min';
 
 function openApiConfig() {
   const saved = localStorage.getItem(LS_API_KEY) || getApiUrl();
@@ -1914,58 +1920,85 @@ function updateLiveIndicator() {
   }
 }
 
-// Override setFetchStatus agar juga update indicator
-// Perbaikan Fungsi setFetchStatus
-function setFetchStatus(status) {
-    const statusElement = document.getElementById('fetch-status'); // Pastikan ID ini ada di HTML
-    if (!statusElement) return;
+// setFetchStatus sudah memanggil updateLiveIndicator secara langsung (lihat definisi aslinya)
 
-    switch (status) {
-        case 'loading':
-            statusElement.innerText = "Memuat Data...";
-            statusElement.style.color = "#eab308"; // Kuning
-            break;
-        case 'success':
-            statusElement.innerText = "Data Terupdate";
-            statusElement.style.color = "#22c55e"; // Hijau
-            break;
-        case 'error':
-            statusElement.innerText = "Koneksi Gagal";
-            statusElement.style.color = "#ef4444"; // Merah
-            break;
-    }
-    
-    // PENTING: Jangan panggil updateTrafficLight() di sini 
-    // agar tidak terjadi loop rekursif.
-}
-
-// Ambil URL dari localStorage jika belum ada di CONFIG
+// Ambil URL — prioritas: data.json > localStorage browser
 function getApiUrl() {
   const fromConfig = CONFIG && CONFIG.spreadsheet && CONFIG.spreadsheet.api_url
     ? CONFIG.spreadsheet.api_url.trim() : '';
   if (fromConfig) return fromConfig;
-  return (localStorage.getItem(LS_API_KEY) || '').trim();
+  try { return (localStorage.getItem(LS_API_KEY) || '').trim(); } catch(e) { return ''; }
+}
+
+
+// ════════════════════════════════════════
+// ONBOARDING — tampilkan panduan setup jika belum ada URL & data
+// ════════════════════════════════════════
+function showOnboarding() {
+  const el = document.getElementById('ov-0');
+  if (!el || appData.length > 0) return;
+  const allEmpty = ['ov-0','ov-1','ov-2'].every(id => {
+    const e = document.getElementById(id);
+    return !e || e.innerHTML.trim() === '';
+  });
+  // Tampilkan onboarding di area overview
+  const ov = document.getElementById('page-overview');
+  if (!ov) return;
+  const existing = document.getElementById('onboarding-banner');
+  if (existing) return; // sudah tampil
+  const banner = document.createElement('div');
+  banner.id = 'onboarding-banner';
+  banner.style.cssText = 'background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:28px 32px;margin-bottom:24px;display:flex;gap:20px;align-items:flex-start';
+  banner.innerHTML = `
+    <div style="font-size:36px;flex-shrink:0">🚀</div>
+    <div style="flex:1">
+      <div style="font-size:16px;font-weight:800;color:#0d1b2e;margin-bottom:8px">Dashboard Siap — Hubungkan Data Anda</div>
+      <div style="font-size:12px;color:#3a5070;line-height:1.7;margin-bottom:16px">
+        Dashboard belum terhubung ke Google Sheets. Ada dua cara untuk menampilkan data:
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:14px">
+          <div style="font-size:11px;font-weight:800;color:#1a6fd4;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">⚡ Opsi 1 — Live dari Sheets</div>
+          <div style="font-size:11px;color:#3a5070;line-height:1.6">Deploy Apps Script → klik <strong>"⚙️ Hubungkan Spreadsheet"</strong> di topbar → paste URL → data langsung tampil & auto-refresh</div>
+        </div>
+        <div style="background:#fff;border:1px solid #bfdbfe;border-radius:8px;padding:14px">
+          <div style="font-size:11px;font-weight:800;color:#1a6fd4;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">📥 Opsi 2 — Upload Excel</div>
+          <div style="font-size:11px;color:#3a5070;line-height:1.6">Klik tombol <strong>"📥 Import"</strong> di topbar → upload file Excel DOPK (.xlsx) → data langsung ditampilkan</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="openApiConfig()" style="background:#1a6fd4;color:#fff;border:none;padding:9px 18px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer">⚙️ Hubungkan Google Sheets</button>
+        <button onclick="openImportModal()" style="background:#fff;border:1.5px solid #d0dcea;color:#3a5070;padding:9px 18px;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">📥 Upload Excel</button>
+      </div>
+    </div>`;
+  ov.insertBefore(banner, ov.firstChild);
+}
+
+function hideOnboarding() {
+  const el = document.getElementById('onboarding-banner');
+  if (el) el.remove();
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
   // 1. Load konfigurasi dari data.json (termasuk spreadsheet.api_url)
   await loadConfig();
 
-  // 2. Coba load dari localStorage dulu (tampil cepat)
+  // 2. Coba load dari localStorage dulu (tampil cepat, tanpa toast)
   const hadCached = loadData();
-  if (hadCached) {
-    renderOverview();
-    showToast('#1a6fd4', `📦 ${appData.length} baris dari cache — menyinkronkan...`);
-  } else {
-    renderOverview(); // tampilkan halaman kosong/loading
+  renderOverview(); // render segera, apapun kondisinya
+
+  // 3. Update live indicator segera setelah config dimuat
+  updateLiveIndicator();
+
+  // 4. Tampilkan onboarding jika tidak ada URL dan tidak ada cache
+  const apiUrl = getApiUrl();
+  if (!apiUrl && !hadCached) {
+    showOnboarding();
   }
 
-  // 3. Fetch data terbaru dari Google Apps Script (jika URL dikonfigurasi)
-  const apiUrl = getApiUrl();
+  // 5. Fetch data terbaru dari Apps Script jika URL sudah dikonfigurasi
   if (apiUrl && isAutoFetch()) {
-    await fetchFromSpreadsheet(!hadCached); // silent jika ada cache
-  } else if (hadCached) {
-    showToast('#1a6fd4', `📦 ${appData.length} baris dimuat dari cache lokal`);
+    await fetchFromSpreadsheet(!hadCached);
   }
 
   // Drag & drop pada drop zone import modal
