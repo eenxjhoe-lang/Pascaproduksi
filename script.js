@@ -1915,10 +1915,28 @@ function updateLiveIndicator() {
 }
 
 // Override setFetchStatus agar juga update indicator
-const _origSetFetchStatus = setFetchStatus;
-function setFetchStatus(status, errMsg) {
-  _origSetFetchStatus(status, errMsg);
-  updateLiveIndicator();
+// Perbaikan Fungsi setFetchStatus
+function setFetchStatus(status) {
+    const statusElement = document.getElementById('fetch-status'); // Pastikan ID ini ada di HTML
+    if (!statusElement) return;
+
+    switch (status) {
+        case 'loading':
+            statusElement.innerText = "Memuat Data...";
+            statusElement.style.color = "#eab308"; // Kuning
+            break;
+        case 'success':
+            statusElement.innerText = "Data Terupdate";
+            statusElement.style.color = "#22c55e"; // Hijau
+            break;
+        case 'error':
+            statusElement.innerText = "Koneksi Gagal";
+            statusElement.style.color = "#ef4444"; // Merah
+            break;
+    }
+    
+    // PENTING: Jangan panggil updateTrafficLight() di sini 
+    // agar tidak terjadi loop rekursif.
 }
 
 // Ambil URL dari localStorage jika belum ada di CONFIG
