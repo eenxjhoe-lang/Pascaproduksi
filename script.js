@@ -464,8 +464,8 @@ function renderOvBlock(pi) {
   const kpis = [
     { l:'Total Realisasi PNBP',   v:fmtRp(s.totalNilai),               sub:`dari target ${fmtRp(TARGETS[pi])}`, ico:'💰', c:'kc0', extra:'' },
     { l:'Jumlah Produksi',         v:s.totalProd.toLocaleString('id-ID'), sub:'Kilogram (kg)',                     ico:'🐟', c:'kc1', extra:'' },
-    { l:'Jumlah LPS Terbit',       v:s.lps,                              sub:'Lembar Pengantar Surat',             ico:'📋', c:'kc2', extra:'' },
-    { l:'Jumlah Kapal Unik',       v:s.ships.length,                     sub:'Unit Kapal Aktif',                  ico:'🚢', c:'kc3', extra:'' },
+    { l:'Jumlah LPS Terbit',       v:s.lps,                              sub:'Lembar Perhitungan Sendiri',             ico:'📋', c:'kc2', extra:'' },
+    { l:'Jumlah Kapal Aktif',       v:s.ships.length,                     sub:'Unit Kapal Aktif',                  ico:'🚢', c:'kc3', extra:'' },
     { l:'Prod. Rata-rata/Kapal',   v:s.avg.toLocaleString('id-ID'),      sub:`kg per kapal masuk (${s.lps} LPS)`, ico:'📊', c:'kc4', extra:'' },
     { l:'Persentase Realisasi',    v:fmtPct(s.pct),                      sub:'vs target tahunan',                 ico:'🎯', c:`kc5 ${wCls}`, extra:wBadge },
   ].map(k => `<div class="kpi-card ${k.c}">
@@ -546,7 +546,7 @@ function buildDetail(pi) {
     <div class="kpi-grid">
       <div class="kpi-card kc0"><div class="kpi-lbl">Total Realisasi PNBP</div><div class="kpi-val sm">${fmtRp(s.totalNilai)}</div><div class="kpi-sub">dari target ${fmtRp(TARGETS[pi])}</div><div class="kpi-ico">💰</div></div>
       <div class="kpi-card kc1"><div class="kpi-lbl">Jumlah Produksi</div><div class="kpi-val">${s.totalProd.toLocaleString('id-ID')}</div><div class="kpi-sub">Kilogram (kg)</div><div class="kpi-ico">🐟</div></div>
-      <div class="kpi-card kc2"><div class="kpi-lbl">Jumlah LPS Terbit</div><div class="kpi-val">${s.lps}</div><div class="kpi-sub">Lembar Pengantar Surat</div><div class="kpi-ico">📋</div></div>
+      <div class="kpi-card kc2"><div class="kpi-lbl">Jumlah LPS Terbit</div><div class="kpi-val">${s.lps}</div><div class="kpi-sub">Lembar Perhitungan Sendiri</div><div class="kpi-ico">📋</div></div>
       <div class="kpi-card kc3"><div class="kpi-lbl">Jumlah Kapal Unik</div><div class="kpi-val">${s.ships.length}</div><div class="kpi-sub">Unit Kapal Aktif</div><div class="kpi-ico">🚢</div></div>
       <div class="kpi-card kc4"><div class="kpi-lbl">Prod. Rata-rata/Kapal</div><div class="kpi-val">${s.avg.toLocaleString('id-ID')}</div><div class="kpi-sub">kg per kapal masuk</div><div class="kpi-ico">📊</div></div>
       <div class="kpi-card kc5 ${wCls}"><div class="kpi-lbl">Persentase Realisasi</div><div class="kpi-val">${fmtPct(s.pct)}</div><div class="kpi-sub">vs target tahunan</div><div class="kpi-ico">🎯</div></div>
@@ -1556,7 +1556,7 @@ function exportInfografis() {
   const kpiDefs = [
     { lbl:'TOTAL REALISASI PNBP',     val:R(totalNilai),               sub:'dari target ' + R(totalTarget), ico:'💰', bg:'#1a6fd4', pct:totalPct },
     { lbl:'JUMLAH PRODUKSI',           val:totalProd.toLocaleString('id-ID'), sub:'Kilogram (kg)',            ico:'🐟', bg:'#059669', pct:-1 },
-    { lbl:'JUMLAH LPS TERBIT',         val:''+totalLps,                 sub:'Lembar Pengantar Surat',         ico:'📋', bg:'#0891b2', pct:-1 },
+    { lbl:'JUMLAH LPS TERBIT',         val:''+totalLps,                 sub:'Lembar Perhitungan Sendiri',         ico:'📋', bg:'#0891b2', pct:-1 },
     { lbl:'JUMLAH KAPAL AKTIF',        val:''+allShips,                 sub:'Unit Kapal Aktif (3 pelabuhan)', ico:'🚢', bg:'#d97706', pct:-1 },
     { lbl:'PRODUKSI RATA-RATA/KAPAL',  val:totalAvg.toLocaleString('id-ID'), sub:'kg per kapal masuk (' + totalLps + ' LPS)', ico:'📊', bg:'#4f46e5', pct:-1 },
     { lbl:'PERSENTASE REALISASI',       val:P(totalPct),                 sub:'vs target tahunan',              ico:'🎯', bg:KC(totalPct), pct:totalPct },
