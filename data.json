@@ -12,12 +12,12 @@
     "kementerian": "KEMENTERIAN KELAUTAN DAN PERIKANAN"
   },
 
- "spreadsheet": {
-    "_comment": "URL Deployment dari Google Apps Script",
-    "api_url": "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
+  "spreadsheet": {
+    "_comment": "Gunakan URL Web App dari Google Apps Script",
+    "api_url":       "https://script.google.com/macros/s/AKfycbxgtdhgT6T-fFf-jA73piSqKAW27MKJrQ8qX6sFUNFbcvGXoyLCWllDjdqiFdH_psEvbw/exec",
     "refresh_menit": 5,
-    "auto_fetch": true,
-    "fallback_csv": false
+    "auto_fetch":    true,
+    "fallback_csv":  false
   },
 
   "pelabuhan": [
@@ -47,3 +47,4 @@
     "logo_kkp": "assets/logo-kkp.svg",
     "logo_sdg": "assets/logo-sdg08.svg"
   }
+}
